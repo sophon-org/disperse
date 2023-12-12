@@ -1,0 +1,15 @@
+{
+  "name": "projectx-disperse",
+  "version": "0.1",
+  "description": "Disperse",
+  "scripts": {
+    "test": "brownie test"
+  },
+  "repository": "",
+  "author": "ProjectX",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@openzeppelin/contracts": "^5.0.1",
+    "cross-env": "^7.0.3"
+  }
+}
