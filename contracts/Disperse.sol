@@ -2,44 +2,43 @@
 
 pragma solidity 0.8.28;
 
-/// @title IERC20Stub Interface
-/// @notice Basic interface for ERC20 token transfer functions
-interface IERC20Stub {
-    /// @notice Transfer tokens to a specified address
-    /// @param to Address to transfer to
-    /// @param value Amount to transfer
-    /// @return Success status
-    function transfer(address to, uint256 value) external returns (bool);
-
-    /// @notice Transfer tokens from one address to another
-    /// @param from Address to transfer from
-    /// @param to Address to transfer to
-    /// @param value Amount to transfer
-    /// @return Success status
-    function transferFrom(address from, address to, uint256 value) external returns (bool);
-}
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /// @title Disperse Contract
 /// @notice Allows batch distribution of ETH and ERC20 tokens
 /// @dev Provides multiple methods for efficient token distribution
-contract Disperse {
+contract Disperse is ReentrancyGuard {
+    using SafeERC20 for IERC20;
+
     /// @notice Error thrown when recipients and values arrays have different lengths
     error ArrayLengthMismatch();
 
     /// @notice Error thrown when a transfer operation fails
     error TransferFailed();
 
+    /// @notice Error thrown when a recipient address is invalid
+    error InvalidRecipient();
+
+    /// @notice Error thrown when a value is invalid
+    error InvalidValue();
+
     /// @notice Distributes ETH to multiple recipients in a single transaction
     /// @param recipients Array of recipient addresses
     /// @param values Array of ETH amounts to send to each recipient
     /// @dev Any remaining ETH is returned to the sender
-    function disperseEther(address[] calldata recipients, uint256[] calldata values) external payable {
+    function disperseEther(address[] calldata recipients, uint256[] calldata values) external payable nonReentrant {
         uint256 len = recipients.length;
         if (len != values.length) revert ArrayLengthMismatch();
 
         bool success;
         for (uint256 i; i < len; i++) {
-            (success,) = recipients[i].call{value: values[i]}("");
+            address recipient = recipients[i];
+            uint256 value = values[i];
+            if (recipient == address(0)) revert InvalidRecipient();
+            if (value == 0) revert InvalidValue();
+
+            (success,) = recipient.call{value: value}("");
             if (!success) revert TransferFailed();
         }
 
@@ -55,7 +54,10 @@ contract Disperse {
     /// @param recipients Array of recipient addresses
     /// @param values Array of token amounts to send to each recipient
     /// @dev Transfers total tokens to this contract first, then distributes to recipients
-    function disperseToken(IERC20Stub token, address[] calldata recipients, uint256[] calldata values) external {
+    function disperseToken(IERC20 token, address[] calldata recipients, uint256[] calldata values)
+        external
+        nonReentrant
+    {
         uint256 len = recipients.length;
         if (len != values.length) revert ArrayLengthMismatch();
 
@@ -65,10 +67,15 @@ contract Disperse {
             total += values[i];
         }
 
-        if (!token.transferFrom(msg.sender, address(this), total)) revert TransferFailed();
+        token.safeTransferFrom(msg.sender, address(this), total);
 
         for (i = 0; i < len; i++) {
-            if (!token.transfer(recipients[i], values[i])) revert TransferFailed();
+            address recipient = recipients[i];
+            uint256 value = values[i];
+            if (recipient == address(0)) revert InvalidRecipient();
+            if (value == 0) revert InvalidValue();
+
+            token.safeTransfer(recipient, value);
         }
     }
 
@@ -77,12 +84,20 @@ contract Disperse {
     /// @param recipients Array of recipient addresses
     /// @param values Array of token amounts to send to each recipient
     /// @dev More gas efficient as it skips the intermediate transfer to this contract
-    function disperseTokenSimple(IERC20Stub token, address[] calldata recipients, uint256[] calldata values) external {
+    function disperseTokenSimple(IERC20 token, address[] calldata recipients, uint256[] calldata values)
+        external
+        nonReentrant
+    {
         uint256 len = recipients.length;
         if (len != values.length) revert ArrayLengthMismatch();
 
         for (uint256 i; i < len; i++) {
-            if (!token.transferFrom(msg.sender, recipients[i], values[i])) revert TransferFailed();
+            address recipient = recipients[i];
+            uint256 value = values[i];
+            if (recipient == address(0)) revert InvalidRecipient();
+            if (value == 0) revert InvalidValue();
+
+            token.safeTransferFrom(msg.sender, recipient, value);
         }
     }
 }

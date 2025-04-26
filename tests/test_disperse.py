@@ -130,6 +130,68 @@ def test_insufficient_balance(disperse, token):
     
     with reverts():  # This will revert due to insufficient balance
         disperse.disperseToken(token.address, recipients, values, {"from": accounts[0]})
+
+def test_zero_address_check_ether(disperse):
+    """Test that zero address is rejected in disperseEther"""
+    recipients = [accounts[1], "0x0000000000000000000000000000000000000000"]
+    values = [Wei("0.1 ether"), Wei("0.2 ether")]
+    total_value = sum(values)
+    
+    with reverts():  # This should revert with InvalidRecipient
+        disperse.disperseEther(recipients, values, {"from": accounts[0], "value": total_value})
+
+def test_zero_address_check_token(disperse, token):
+    """Test that zero address is rejected in disperseToken"""
+    recipients = [accounts[1], "0x0000000000000000000000000000000000000000"]
+    values = [100, 200]
+    total_value = sum(values)
+    
+    token.approve(disperse.address, total_value, {"from": accounts[0]})
+    
+    with reverts():  # This should revert with InvalidRecipient
+        disperse.disperseToken(token.address, recipients, values, {"from": accounts[0]})
+
+def test_zero_address_check_token_simple(disperse, token):
+    """Test that zero address is rejected in disperseTokenSimple"""
+    recipients = [accounts[1], "0x0000000000000000000000000000000000000000"]
+    values = [100, 200]
+    total_value = sum(values)
+    
+    token.approve(disperse.address, total_value, {"from": accounts[0]})
+    
+    with reverts():  # This should revert with InvalidRecipient
+        disperse.disperseTokenSimple(token.address, recipients, values, {"from": accounts[0]})
+
+def test_zero_value_check_ether(disperse):
+    """Test that zero value is rejected in disperseEther"""
+    recipients = [accounts[1], accounts[2]]
+    values = [Wei("0.1 ether"), 0]
+    total_value = sum(values)
+    
+    with reverts():  # This should revert with InvalidValue
+        disperse.disperseEther(recipients, values, {"from": accounts[0], "value": total_value})
+
+def test_zero_value_check_token(disperse, token):
+    """Test that zero value is rejected in disperseToken"""
+    recipients = [accounts[1], accounts[2]]
+    values = [100, 0]
+    total_value = sum(values)
+    
+    token.approve(disperse.address, total_value, {"from": accounts[0]})
+    
+    with reverts():  # This should revert with InvalidValue
+        disperse.disperseToken(token.address, recipients, values, {"from": accounts[0]})
+
+def test_zero_value_check_token_simple(disperse, token):
+    """Test that zero value is rejected in disperseTokenSimple"""
+    recipients = [accounts[1], accounts[2]]
+    values = [100, 0]
+    total_value = sum(values)
+    
+    token.approve(disperse.address, total_value, {"from": accounts[0]})
+    
+    with reverts():  # This should revert with InvalidValue
+        disperse.disperseTokenSimple(token.address, recipients, values, {"from": accounts[0]})
         
 def test_gas_comparison(disperse, token):
     """Compare gas usage between disperseToken and disperseTokenSimple"""
@@ -163,3 +225,4 @@ def test_gas_comparison(disperse, token):
     print(f"Gas used by disperseToken: {gas_disperseToken}")
     print(f"Gas used by disperseTokenSimple: {gas_disperseTokenSimple}")
     print(f"Gas saving with simple method: {gas_disperseToken - gas_disperseTokenSimple}")
+
