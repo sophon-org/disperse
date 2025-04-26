@@ -7,7 +7,7 @@ project_structure:
     tests: tests
 
 networks:
-    default: development
+    default: anvil
     development:
         gas_limit: max
         gas_buffer: 1
@@ -20,7 +20,7 @@ networks:
             port: 8555
             gas_limit: 8000000
             accounts: 10
-            evm_version: istanbul
+            evm_version: cancun
             mnemonic: brownie
             block_time: 0
             default_balance: 100
@@ -34,9 +34,9 @@ networks:
         default_contract_owner: false
 
 compiler:
-    evm_version: null
+    evm_version: cancun
     solc:
-        version: null
+        version: 0.8.28
         optimizer:
             enabled: true
             runs: 200
