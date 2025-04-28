@@ -1,4 +1,5 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: GPL-3.0-only
+
 pragma solidity 0.8.28;
 
 contract MockERC20 {
@@ -10,7 +11,7 @@ contract MockERC20 {
     event Approval(address indexed owner, address indexed spender, uint256 value);
 
     constructor() {
-        _mint(msg.sender, 1000000 * 10 ** 18);
+        _mint(msg.sender, 1000000e18);
     }
 
     function totalSupply() public view returns (uint256) {

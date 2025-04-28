@@ -1,13 +1,24 @@
 {
   "name": "disperse",
-  "version": "0.1",
-  "description": "Disperse",
+  "version": "0.1.0",
+  "description": "Gas-efficient contract for distributing ETH and ERC20 tokens to multiple recipients",
   "scripts": {
     "test": "brownie test"
   },
-  "repository": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sophon-org/disperse.git"
+  },
+  "keywords": [
+    "sophon",
+    "ethereum",
+    "solidity",
+    "tokens",
+    "distribution",
+    "airdrop"
+  ],
   "author": "Sophon",
-  "license": "UNLICENSED",
+  "license": "GPL-3.0-only",
   "devDependencies": {
     "@openzeppelin/contracts": "5.3.0",
     "cross-env": "^7.0.3"

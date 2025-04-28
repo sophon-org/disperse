@@ -192,7 +192,49 @@ def test_zero_value_check_token_simple(disperse, token):
     
     with reverts():  # This should revert with InvalidValue
         disperse.disperseTokenSimple(token.address, recipients, values, {"from": accounts[0]})
+
+def test_invalid_input_validation(disperse, token):
+    """Test multiple validation checks with invalid inputs"""
+    # Empty recipients array
+    empty_recipients = []
+    values = [100]
+    
+    with reverts():
+        disperse.disperseEther(empty_recipients, values, {"from": accounts[0], "value": 100})
+    
+    # Empty values array
+    recipients = [accounts[1]]
+    empty_values = []
+    
+    with reverts():
+        disperse.disperseEther(recipients, empty_values, {"from": accounts[0], "value": 100})
+    
+    # Insufficient ETH sent
+    recipients = [accounts[1], accounts[2]]
+    values = [Wei("0.1 ether"), Wei("0.2 ether")]
+    insufficient_value = Wei("0.2 ether")  # Less than total needed
+    
+    with reverts():
+        disperse.disperseEther(recipients, values, {"from": accounts[0], "value": insufficient_value})
         
+    # Mix of valid and invalid values for tokens
+    recipients = [accounts[1], accounts[2], accounts[3]]
+    values = [100, 0, 200]  # One value is zero
+    
+    token.approve(disperse.address, sum(values), {"from": accounts[0]})
+    
+    with reverts():
+        disperse.disperseToken(token.address, recipients, values, {"from": accounts[0]})
+        
+    # Mix of valid and invalid recipients for tokens
+    recipients = [accounts[1], "0x0000000000000000000000000000000000000000", accounts[3]]
+    values = [100, 200, 300]
+    
+    token.approve(disperse.address, sum(values), {"from": accounts[0]})
+    
+    with reverts():
+        disperse.disperseTokenSimple(token.address, recipients, values, {"from": accounts[0]})
+
 def test_gas_comparison(disperse, token):
     """Compare gas usage between disperseToken and disperseTokenSimple"""
     recipients = [accounts[1], accounts[2], accounts[3], accounts[4], accounts[5]]
